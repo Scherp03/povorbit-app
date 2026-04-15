@@ -66,6 +66,28 @@ export default function PovOrbit() {
     stateRef.current.walkTime = walkTime;
   }, [walkTime]);
 
+  // ── Timer starts only when GPS is acquired ──
+  useEffect(() => {
+    if (isTracking && gpsStatus === "active") {
+      // Start timer only when GPS is active
+      timerRef.current = setInterval(
+        () => setWalkTime((t) => t + 1),
+        1000
+      );
+    } else {
+      // Stop timer when GPS is lost or tracking stops
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isTracking, gpsStatus]);
+
   // ── Lap flash animation ──
   const triggerFlash = () => {
     setLapFlash(true);
@@ -149,11 +171,6 @@ export default function PovOrbit() {
     lastPosRef.current = null;
     movedAwayRef.current = false;
 
-    timerRef.current = setInterval(
-      () => setWalkTime((t) => t + 1),
-      1000
-    );
-
     if (navigator.geolocation) {
       watchRef.current = navigator.geolocation.watchPosition(
         handlePosition,
@@ -173,7 +190,6 @@ export default function PovOrbit() {
   const stopTracking = () => {
     if (watchRef.current != null)
       navigator.geolocation.clearWatch(watchRef.current);
-    clearInterval(timerRef.current);
     setIsTracking(false);
     setGpsStatus("idle");
     commitPlayer(name, laps, totalDist, walkTime);
