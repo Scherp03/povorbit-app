@@ -1,4 +1,4 @@
-import PovOrbit from './povorbit'
+import PovOrbit from './components/PovOrbit'
 
 function App() {
   return (
